@@ -1,15 +1,19 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '../assets/styles.css'
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Header from '../components/sections/Header';
 import InputField from '../components/sections/InputField';
 import { validEmail, validPassword } from '../components/Regex';
-import { useRef, useState, useEffect } from 'react';
+import React,{ useRef, useState, useEffect } from 'react';
 import { faInfoCircle } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import axios from '../api/axios';
+
+const REGISTER_URL = '/api/register';
 
 const Register = () =>
 {
+    const navigate = useNavigate();
     const userInputRef = useRef();
     const errRef = useRef();
     const checkboxRef = useRef();
@@ -38,15 +42,11 @@ const Register = () =>
 
     useEffect(() => {
         const result = validEmail.test(emailInput);
-        console.log(result);
-        console.log(emailInput);
         setValidEmailInput(result);
     }, [emailInput]);
 
     useEffect(() => {
         const result = validPassword.test(passwordInput);
-        console.log(result);
-        console.log(passwordInput);
         setValidPasswordInput(result);
         const matched = passwordInput === confirmPasswordInput;
         setConfirmPasswordMatched(matched);
@@ -58,29 +58,35 @@ const Register = () =>
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
+    
         const v1 = validEmail.test(emailInput);
         const v2 = validPassword.test(passwordInput);
-        if(!v1 || !v2){
+        if (!v1 || !v2) {
             setErrMsg("Invalid Entry");
             return;
         }
-
-        // change this later
-        console.log(emailInput, passwordInput);
-        setSuccess(true);
+        try{
+            const response = await axios.post(REGISTER_URL,
+                JSON.stringify({email: emailInput, password: passwordInput}),
+                {
+                    headers: { 'Content-Type': 'application/json'},
+                    withCredentials: true
+                });
+                navigate('/login');
+        } catch(err) {
+            if(!err?.response){
+                console.log(err)
+                setErrMsg(' No Server Response');
+            } else if (err.response?.status === 500){
+                setErrMsg('Email already taken');
+            } else {
+                setErrMsg('Registration failed.');
+            }
+            errRef.current.focus();
+        }
     }
-
+    
   return (
-    <>
-    {success ? (
-        <section>
-            <h1>Success!</h1>
-            <p>
-                <a href="/">Sign In</a>
-            </p>
-        </section>
-    ) : (
     <div className='vh-100 text-white c-bg'>
         <Header />
         <div className='login template d-flex vh-100 justify-content-center align-items-center'>
@@ -199,8 +205,5 @@ const Register = () =>
         </div>
     </div>
     )}
-    </>
-  )
-}
 
 export default Register
