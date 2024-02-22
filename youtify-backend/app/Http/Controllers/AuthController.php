@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cookie;
 use Symfony\Component\HttpFoundation\Response;
 use App\Models\User;
+use Illuminate\Support\Facades\Mail;
 
 class AuthController extends Controller
 {
@@ -37,6 +38,13 @@ class AuthController extends Controller
             'email' => $request->input('email'),
             'password' => Hash  ::make($request->input('password'))
         ]);
+
+        Mail::send('email', [], function($message){
+            $message->to('recipient@example.com')
+                    ->subject('Your Subject Here');
+        });
+        
+
     }
 
     public function user()

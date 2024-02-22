@@ -20,7 +20,7 @@ class EventServiceProvider extends ServiceProvider
         ],
     ];
 
-    /**
+    /**n link. As you can see by examining your application's 
      * Register any events for your application.
      */
     public function boot(): void
