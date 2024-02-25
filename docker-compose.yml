@@ -1,0 +1,85 @@
+version: "3.7"
+services:
+  react:
+    build:
+      context: ./frontend-react
+      dockerfile: Dockerfile-react
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend-react:/app
+      - /app/node_modules
+    networks:
+      - app-network
+
+  nginx:
+    build:
+      context: ./nginx
+    ports:
+      - "8000:80"
+      - "9000"
+    networks:
+      - app-network
+    volumes:
+      - ./youtify-backend/:/var/www/youtify-backend/
+      - ./logs/nginx:/var/log/nginx/
+    container_name: nginx
+
+  laravel:
+    build:
+      context: ./youtify-backend
+      dockerfile: Dockerfile-laravel
+    volumes:
+      - ./youtify-backend:/var/www/youtify-backend/
+      - ./logs/php.log:/var/log/fpm-php.www.log
+    environment:
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: appdev_proj
+      DB_USERNAME: root
+      DB_PASSWORD: root
+    networks:
+      - app-network
+    expose:
+      - "9000"
+
+  mysql:
+    image: mysql:5.7
+    container_name: mysql
+    environment:
+      MYSQL_DATABASE: appdev_proj
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - ./mysql-data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    networks:
+      - app-network
+    expose:
+      - 3306
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    environment:
+      PMA_HOST: mysql
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "8080:80"
+    networks:
+      - app-network
+    depends_on:
+      - mysql
+
+  mailhog:
+    image: mailhog/mailhog
+    container_name: 'mailhog'
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
